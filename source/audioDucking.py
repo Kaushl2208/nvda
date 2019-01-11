@@ -62,8 +62,13 @@ def _setDuckingState(switch):
 				_lastDuckedTime=time.time()
 			else:
 				oledll.oleacc.AccSetRunningUtilityState(ATWindow,ANRUS_ducking_AUDIO_ACTIVE|ANRUS_ducking_AUDIO_ACTIVE_NODUCK,ANRUS_ducking_AUDIO_ACTIVE_NODUCK)
-		except:
-			log.debugWarning("Unable to set ducking state.", exc_info=True)
+		except WindowsError as e:
+			# ERROR_ACCESS_DENIED is 0x5
+			# https://docs.microsoft.com/en-us/windows/desktop/debug/system-error-codes--0-499-
+			ERROR_ACCESS_DENIED = 0x80070005
+			if e.errno != ERROR_ACCESS_DENIED:
+				log.debugWarning("Unable to set ducking state.", exc_info=True)
+				raise e
 
 def _ensureDucked():
 	global _duckingRefCount
